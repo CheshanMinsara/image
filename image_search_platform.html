@@ -1,0 +1,784 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ImageFinder - Web Image Search</title>
+    <style>
+        :root {
+            --primary-color: #4a6fa5;
+            --secondary-color: #166088;
+            --accent-color: #4fc3f7;
+            --light-bg: #f5f7fa;
+            --dark-text: #333;
+            --light-text: #fff;
+            --gray-text: #666;
+            --shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        
+        body {
+            background-color: var(--light-bg);
+            color: var(--dark-text);
+            line-height: 1.6;
+        }
+        
+        header {
+            background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+            color: var(--light-text);
+            padding: 1.5rem 0;
+            text-align: center;
+            box-shadow: var(--shadow);
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 1rem;
+        }
+        
+        .logo {
+            font-size: 2rem;
+            font-weight: bold;
+            margin-bottom: 0.5rem;
+        }
+        
+        .tagline {
+            font-size: 1rem;
+            opacity: 0.9;
+        }
+        
+        .search-section {
+            padding: 2rem 0;
+            text-align: center;
+        }
+        
+        .search-container {
+            display: flex;
+            max-width: 600px;
+            margin: 0 auto;
+            box-shadow: var(--shadow);
+            border-radius: 50px;
+            overflow: hidden;
+        }
+        
+        .search-input {
+            flex: 1;
+            padding: 1rem 1.5rem;
+            border: none;
+            font-size: 1rem;
+        }
+        
+        .search-input:focus {
+            outline: none;
+        }
+        
+        .search-button {
+            background-color: var(--secondary-color);
+            color: var(--light-text);
+            border: none;
+            padding: 1rem 1.5rem;
+            cursor: pointer;
+            font-size: 1rem;
+            transition: background-color 0.3s ease;
+        }
+        
+        .search-button:hover {
+            background-color: var(--primary-color);
+        }
+
+        .filters {
+            display: flex;
+            justify-content: center;
+            gap: 1rem;
+            margin-top: 1rem;
+        }
+
+        .filter-select {
+            padding: 0.5rem;
+            border-radius: 4px;
+            border: 1px solid #ddd;
+        }
+        
+        .results-section {
+            padding: 2rem 0;
+        }
+        
+        .results-info {
+            text-align: center;
+            margin-bottom: 1rem;
+            color: var(--gray-text);
+        }
+        
+        .results-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+            gap: 1.5rem;
+            padding: 1rem;
+        }
+        
+        .image-card {
+            background-color: #fff;
+            border-radius: 8px;
+            overflow: hidden;
+            box-shadow: var(--shadow);
+            transition: transform 0.3s ease;
+        }
+        
+        .image-card:hover {
+            transform: translateY(-5px);
+        }
+        
+        .image-container {
+            position: relative;
+            padding-top: 75%; /* 4:3 aspect ratio */
+            overflow: hidden;
+            background-color: #f0f0f0;
+        }
+        
+        .image-container img {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            transition: transform 0.3s ease;
+        }
+        
+        .image-card:hover .image-container img {
+            transform: scale(1.05);
+        }
+        
+        .image-details {
+            padding: 1rem;
+        }
+        
+        .image-title {
+            font-size: 1rem;
+            font-weight: 600;
+            margin-bottom: 0.5rem;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+        
+        .image-meta {
+            display: flex;
+            justify-content: space-between;
+            color: var(--gray-text);
+            font-size: 0.85rem;
+        }
+        
+        .image-actions {
+            display: flex;
+            margin-top: 0.75rem;
+            gap: 0.5rem;
+        }
+        
+        .download-btn, .preview-btn {
+            padding: 0.5rem;
+            border: none;
+            border-radius: 4px;
+            font-size: 0.85rem;
+            cursor: pointer;
+            flex: 1;
+            text-align: center;
+            transition: background-color 0.3s ease;
+        }
+        
+        .download-btn {
+            background-color: var(--accent-color);
+            color: var(--dark-text);
+        }
+        
+        .preview-btn {
+            background-color: #e0e0e0;
+            color: var(--dark-text);
+        }
+        
+        .download-btn:hover, .preview-btn:hover {
+            opacity: 0.9;
+        }
+        
+        .pagination {
+            display: flex;
+            justify-content: center;
+            margin-top: 2rem;
+            gap: 0.5rem;
+        }
+        
+        .page-btn {
+            padding: 0.5rem 1rem;
+            border: 1px solid #ddd;
+            background-color: #fff;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        
+        .page-btn.active {
+            background-color: var(--primary-color);
+            color: var(--light-text);
+            border-color: var(--primary-color);
+        }
+        
+        .page-btn:hover:not(.active) {
+            background-color: #f5f5f5;
+        }
+        
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.8);
+            z-index: 100;
+            justify-content: center;
+            align-items: center;
+        }
+        
+        .modal-content {
+            position: relative;
+            max-width: 90%;
+            max-height: 90%;
+        }
+        
+        .modal-image {
+            max-width: 100%;
+            max-height: 80vh;
+            display: block;
+            box-shadow: 0 0 20px rgba(0, 0, 0, 0.5);
+        }
+        
+        .modal-close {
+            position: absolute;
+            top: -40px;
+            right: 0;
+            color: #fff;
+            font-size: 1.5rem;
+            cursor: pointer;
+        }
+        
+        .modal-actions {
+            display: flex;
+            justify-content: center;
+            gap: 1rem;
+            margin-top: 1rem;
+        }
+        
+        .modal-download {
+            padding: 0.75rem 1.5rem;
+            background-color: var(--accent-color);
+            color: var(--dark-text);
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: background-color 0.3s ease;
+        }
+
+        .modal-download:hover {
+            opacity: 0.9;
+        }
+        
+        .loader {
+            display: none;
+            text-align: center;
+            padding: 2rem 0;
+        }
+        
+        .loader-spinner {
+            width: 50px;
+            height: 50px;
+            border: 5px solid #f3f3f3;
+            border-top: 5px solid var(--primary-color);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin: 0 auto;
+        }
+        
+        .no-results {
+            text-align: center;
+            padding: 2rem;
+            color: var(--gray-text);
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        
+        footer {
+            text-align: center;
+            padding: 2rem 0;
+            background-color: #fff;
+            color: var(--gray-text);
+            margin-top: 2rem;
+        }
+        
+        @media (max-width: 768px) {
+            .search-container {
+                flex-direction: column;
+                border-radius: 8px;
+            }
+            
+            .search-button {
+                padding: 0.75rem;
+                border-radius: 0;
+            }
+            
+            .results-grid {
+                grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+                gap: 1rem;
+            }
+            
+            .filters {
+                flex-direction: column;
+                align-items: center;
+            }
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <div class="container">
+            <div class="logo">ImageFinder</div>
+            <div class="tagline">Find beautiful Unsplash images for your projects</div>
+        </div>
+    </header>
+    
+    <main>
+        <section class="search-section">
+            <div class="container">
+                <div class="search-container">
+                    <input type="text" class="search-input" placeholder="Search for images..." id="searchInput">
+                    <button class="search-button" id="searchButton">Search</button>
+                </div>
+        <div class="filters">
+                    <select class="filter-select" id="sizeFilter">
+                        <option value="">Any orientation</option>
+                        <option value="landscape">Landscape</option>
+                        <option value="portrait">Portrait</option>
+                        <option value="squarish">Square</option>
+                    </select>
+                    <select class="filter-select" id="colorFilter">
+                        <option value="">Any color</option>
+                        <option value="black_and_white">Black & White</option>
+                        <option value="black">Black</option>
+                        <option value="white">White</option>
+                        <option value="yellow">Yellow</option>
+                        <option value="orange">Orange</option>
+                        <option value="red">Red</option>
+                        <option value="purple">Purple</option>
+                        <option value="magenta">Magenta</option>
+                        <option value="green">Green</option>
+                        <option value="teal">Teal</option>
+                        <option value="blue">Blue</option>
+                    </select>
+                    <select class="filter-select" id="typeFilter">
+                        <option value="">Any content</option>
+                        <option value="high">High</option>
+                        <option value="low">Low</option>
+                    </select>
+                </div>
+            </div>
+        </section>
+        
+        <div class="loader" id="loader">
+            <div class="loader-spinner"></div>
+            <p>Searching for images...</p>
+        </div>
+        
+        <section class="results-section">
+            <div class="container">
+                <div class="results-info" id="resultsInfo">
+                    <!-- Will be populated by JavaScript -->
+                </div>
+                <div class="results-grid" id="resultsGrid">
+                    <!-- Will be populated by JavaScript -->
+                </div>
+                <div class="no-results" id="noResults" style="display: none;">
+                    <h3>No images found</h3>
+                    <p>Try different search terms or filters</p>
+                </div>
+                <div class="pagination" id="pagination">
+                    <!-- Will be populated by JavaScript -->
+                </div>
+            </div>
+        </section>
+    </main>
+    
+    <div class="modal" id="previewModal">
+        <div class="modal-content">
+            <span class="modal-close" id="modalClose">&times;</span>
+            <img src="" alt="Preview" class="modal-image" id="modalImage">
+            <div class="modal-actions">
+                <button class="modal-download" id="modalDownload">Download Image</button>
+            </div>
+        </div>
+    </div>
+    
+    <footer>
+        <div class="container">
+            <p>&copy; 2025 ImageFinder. All rights reserved.</p>
+            <p>A simple image search platform</p>
+        </div>
+    </footer>
+    
+    <script>
+        // Constants and state management
+        const UNSPLASH_API_KEY = '5AcZGDEpI2dfZ2KGkbaFuMjhZYnGK6Qu8mFT_b7W_7o'; // Replace with your actual Unsplash API key
+        const UNSPLASH_API_URL = 'https://api.unsplash.com';
+        
+        let currentPage = 1;
+        const imagesPerPage = 20;
+        let totalImages = 0;
+        let currentSearchTerm = '';
+        let currentFilters = {
+            size: '',
+            color: '',
+            type: ''
+        };
+
+        // Elements
+        const searchInput = document.getElementById('searchInput');
+        const searchButton = document.getElementById('searchButton');
+        const sizeFilter = document.getElementById('sizeFilter');
+        const colorFilter = document.getElementById('colorFilter');
+        const typeFilter = document.getElementById('typeFilter');
+        const resultsGrid = document.getElementById('resultsGrid');
+        const resultsInfo = document.getElementById('resultsInfo');
+        const pagination = document.getElementById('pagination');
+        const loader = document.getElementById('loader');
+        const noResults = document.getElementById('noResults');
+        const previewModal = document.getElementById('previewModal');
+        const modalImage = document.getElementById('modalImage');
+        const modalClose = document.getElementById('modalClose');
+        const modalDownload = document.getElementById('modalDownload');
+
+        // Event listeners
+        searchButton.addEventListener('click', () => {
+            const searchTerm = searchInput.value.trim();
+            if (searchTerm) {
+                currentSearchTerm = searchTerm;
+                currentFilters = {
+                    size: sizeFilter.value,
+                    color: colorFilter.value,
+                    type: typeFilter.value
+                };
+                currentPage = 1;
+                searchImages();
+            }
+        });
+
+        searchInput.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') {
+                searchButton.click();
+            }
+        });
+
+        sizeFilter.addEventListener('change', triggerFilteredSearch);
+        colorFilter.addEventListener('change', triggerFilteredSearch);
+        typeFilter.addEventListener('change', triggerFilteredSearch);
+
+        modalClose.addEventListener('click', () => {
+            previewModal.style.display = 'none';
+        });
+
+        window.addEventListener('click', (e) => {
+            if (e.target === previewModal) {
+                previewModal.style.display = 'none';
+            }
+        });
+
+        // Functions
+        function triggerFilteredSearch() {
+            if (currentSearchTerm) {
+                currentFilters = {
+                    size: sizeFilter.value,
+                    color: colorFilter.value,
+                    type: typeFilter.value
+                };
+                currentPage = 1;
+                searchImages();
+            }
+        }
+
+        function searchImages() {
+            showLoader();
+            
+            fetchUnsplashImages()
+                .then(data => {
+                    displayResults(data);
+                    hideLoader();
+                })
+                .catch(error => {
+                    console.error('Error fetching images:', error);
+                    hideLoader();
+                    showNoResults();
+                });
+        }
+
+        function fetchUnsplashImages() {
+            // Build the API request URL with search parameters and filters
+            let url = new URL(`${UNSPLASH_API_URL}/search/photos`);
+            
+            // Add required parameters
+            url.searchParams.append('client_id', UNSPLASH_API_KEY);
+            url.searchParams.append('query', currentSearchTerm);
+            url.searchParams.append('page', currentPage);
+            url.searchParams.append('per_page', imagesPerPage);
+            
+            // Add filters if specified
+            if (currentFilters.color) {
+                url.searchParams.append('color', currentFilters.color);
+            }
+            
+            // Note: Unsplash API doesn't directly support size filtering as we defined,
+            // but we could add orientation filter
+            if (currentFilters.size === 'large') {
+                url.searchParams.append('orientation', 'landscape');
+            } else if (currentFilters.size === 'small') {
+                url.searchParams.append('orientation', 'portrait');
+            }
+            
+            // For content_filter, we can use the Unsplash filter for content safety
+            if (currentFilters.type === 'photo') {
+                url.searchParams.append('content_filter', 'high');
+            }
+            
+            return fetch(url)
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error('Network response was not ok');
+                    }
+                    return response.json();
+                })
+                .then(data => {
+                    totalImages = data.total;
+                    
+                    // Transform the Unsplash data into our format
+                    const images = data.results.map(image => ({
+                        id: image.id,
+                        title: image.description || image.alt_description || `Photo by ${image.user.name}`,
+                        url: image.urls.regular,
+                        thumb_url: image.urls.small,
+                        download_url: image.links.download,
+                        width: image.width,
+                        height: image.height,
+                        photographer: image.user.name,
+                        profile_url: image.user.links.html,
+                        fileSize: formatFileSize(image.width * image.height / 10000) // Approximate file size based on dimensions
+                    }));
+                    
+                    return {
+                        images: images,
+                        total: data.total
+                    };
+                });
+        }
+        
+        function formatFileSize(kb) {
+            if (kb < 1000) {
+                return Math.round(kb) + ' KB';
+            } else {
+                return (kb / 1000).toFixed(1) + ' MB';
+            }
+        }
+
+        function displayResults(data) {
+            const { images, total } = data;
+            totalImages = total;
+            
+            if (images.length === 0) {
+                showNoResults();
+                return;
+            }
+            
+            noResults.style.display = 'none';
+            
+            // Update results info
+            const start = (currentPage - 1) * imagesPerPage + 1;
+            const end = Math.min(start + images.length - 1, totalImages);
+            resultsInfo.textContent = `Showing ${start}-${end} of ${totalImages} results for "${currentSearchTerm}"`;
+            
+            // Clear previous results
+            resultsGrid.innerHTML = '';
+            
+            // Add new results
+            images.forEach(image => {
+                const card = createImageCard(image);
+                resultsGrid.appendChild(card);
+            });
+            
+            // Update pagination
+            updatePagination();
+        }
+
+        function createImageCard(image) {
+            const card = document.createElement('div');
+            card.className = 'image-card';
+            
+            card.innerHTML = `
+                <div class="image-container">
+                    <img src="${image.thumb_url || image.url}" alt="${image.title}" loading="lazy">
+                </div>
+                <div class="image-details">
+                    <div class="image-title">${image.title}</div>
+                    <div class="image-meta">
+                        <span>${image.width} × ${image.height}</span>
+                        <span>${image.fileSize}</span>
+                    </div>
+                    <div class="image-meta">
+                        <span>By <a href="${image.profile_url}" target="_blank">${image.photographer}</a></span>
+                    </div>
+                    <div class="image-actions">
+                        <button class="preview-btn" data-id="${image.id}" data-url="${image.url}" data-title="${image.title}">Preview</button>
+                        <button class="download-btn" data-url="${image.download_url || image.url}" data-title="${image.title}">Download</button>
+                    </div>
+                </div>
+            `;
+            
+            // Add event listeners
+            const previewBtn = card.querySelector('.preview-btn');
+            const downloadBtn = card.querySelector('.download-btn');
+            
+            previewBtn.addEventListener('click', () => {
+                openPreviewModal(image.url, image.title);
+            });
+            
+            downloadBtn.addEventListener('click', () => {
+                downloadImage(image.download_url || image.url, image.title);
+            });
+            
+            return card;
+        }
+
+        function openPreviewModal(imageUrl, imageTitle) {
+            modalImage.src = imageUrl;
+            modalImage.alt = imageTitle;
+            previewModal.style.display = 'flex';
+            
+            modalDownload.onclick = () => {
+                downloadImage(imageUrl, imageTitle);
+            };
+        }
+
+        function downloadImage(imageUrl, imageTitle) {
+            // For Unsplash, we should track downloads
+            fetch(imageUrl);
+            
+            const filename = `${imageTitle.replace(/\s+/g, '-').toLowerCase()}.jpg`;
+            
+            // Create a temporary link element to trigger the download
+            const link = document.createElement('a');
+            link.href = imageUrl;
+            link.download = filename;
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+        }
+
+        function updatePagination() {
+            pagination.innerHTML = '';
+            
+            const totalPages = Math.ceil(totalImages / imagesPerPage);
+            
+            // Previous button
+            if (currentPage > 1) {
+                addPaginationButton('&laquo;', currentPage - 1);
+            }
+            
+            // Page numbers
+            const maxPagesToShow = 5;
+            let startPage = Math.max(1, currentPage - Math.floor(maxPagesToShow / 2));
+            let endPage = Math.min(totalPages, startPage + maxPagesToShow - 1);
+            
+            if (endPage - startPage + 1 < maxPagesToShow) {
+                startPage = Math.max(1, endPage - maxPagesToShow + 1);
+            }
+            
+            if (startPage > 1) {
+                addPaginationButton(1, 1);
+                if (startPage > 2) {
+                    addEllipsis();
+                }
+            }
+            
+            for (let i = startPage; i <= endPage; i++) {
+                addPaginationButton(i, i, i === currentPage);
+            }
+            
+            if (endPage < totalPages) {
+                if (endPage < totalPages - 1) {
+                    addEllipsis();
+                }
+                addPaginationButton(totalPages, totalPages);
+            }
+            
+            // Next button
+            if (currentPage < totalPages) {
+                addPaginationButton('&raquo;', currentPage + 1);
+            }
+        }
+
+        function addPaginationButton(text, pageNum, isActive = false) {
+            const button = document.createElement('button');
+            button.className = `page-btn${isActive ? ' active' : ''}`;
+            button.innerHTML = text;
+            
+            button.addEventListener('click', () => {
+                if (pageNum !== currentPage) {
+                    currentPage = pageNum;
+                    searchImages();
+                    // Scroll back to top of results
+                    document.querySelector('.results-section').scrollIntoView({ behavior: 'smooth' });
+                }
+            });
+            
+            pagination.appendChild(button);
+        }
+
+        function addEllipsis() {
+            const ellipsis = document.createElement('span');
+            ellipsis.className = 'page-btn';
+            ellipsis.textContent = '...';
+            ellipsis.style.cursor = 'default';
+            pagination.appendChild(ellipsis);
+        }
+
+        function showLoader() {
+            loader.style.display = 'block';
+            resultsGrid.style.display = 'none';
+            pagination.style.display = 'none';
+            noResults.style.display = 'none';
+        }
+
+        function hideLoader() {
+            loader.style.display = 'none';
+            resultsGrid.style.display = 'grid';
+            pagination.style.display = 'flex';
+        }
+
+        function showNoResults() {
+            resultsGrid.style.display = 'none';
+            pagination.style.display = 'none';
+            noResults.style.display = 'block';
+            resultsInfo.textContent = `No results found for "${currentSearchTerm}"`;
+        }
+
+        // Initialize with a default search if desired
+        // searchInput.value = 'nature';
+        // searchButton.click();
+    </script>
+</body>
+</html>
