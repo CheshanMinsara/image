@@ -1,0 +1,1005 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>ImageFinder - Beautiful Image Search</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        :root {
+            --primary-color: #4361ee;
+            --secondary-color: #3a0ca3;
+            --accent-color: #4cc9f0;
+            --light-bg: #f8f9fa;
+            --dark-text: #2b2d42;
+            --light-text: #f8f9fa;
+            --gray-text: #6c757d;
+            --shadow-sm: 0 1px 3px rgba(0,0,0,0.12);
+            --shadow-md: 0 4px 6px rgba(0,0,0,0.1);
+            --shadow-lg: 0 10px 15px rgba(0,0,0,0.1);
+            --transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+            --border-radius: 12px;
+            --card-radius: 16px;
+        }
+
+        * {
+            margin: 0; 
+            padding: 0; 
+            box-sizing: border-box;
+            font-family: 'Poppins', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+        }
+
+        body {
+            background-color: var(--light-bg);
+            color: var(--dark-text);
+            line-height: 1.6;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+
+        @supports (font-variation-settings: normal) {
+            * {
+                font-family: 'Poppins', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            }
+        }
+
+        header {
+            background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+            color: var(--light-text);
+            padding: 2rem 0;
+            text-align: center;
+            box-shadow: var(--shadow-md);
+            position: relative;
+            overflow: hidden;
+        }
+
+        header::after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            height: 4px;
+            background: linear-gradient(90deg, rgba(76,201,240,1) 0%, rgba(67,97,238,1) 50%, rgba(58,12,163,1) 100%);
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 1.5rem;
+        }
+
+        .logo {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            letter-spacing: -0.5px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.75rem;
+        }
+
+        .logo i {
+            font-size: 2rem;
+        }
+
+        .tagline {
+            font-size: 1.1rem;
+            opacity: 0.9;
+            font-weight: 300;
+        }
+
+        .search-section {
+            padding: 3rem 0 2rem;
+            text-align: center;
+        }
+
+        .search-container {
+            display: flex;
+            max-width: 700px;
+            margin: 0 auto;
+            box-shadow: var(--shadow-lg);
+            border-radius: 50px;
+            overflow: hidden;
+            transition: var(--transition);
+            border: 2px solid transparent;
+        }
+
+        .search-container:focus-within {
+            border-color: var(--accent-color);
+            box-shadow: 0 0 0 3px rgba(76, 201, 240, 0.3);
+        }
+
+        .search-input {
+            flex: 1;
+            padding: 1.25rem 2rem;
+            border: none;
+            font-size: 1.1rem;
+            background-color: white;
+        }
+
+        .search-input::placeholder {
+            color: var(--gray-text);
+            opacity: 0.7;
+        }
+
+        .search-input:focus {
+            outline: none;
+        }
+
+        .search-button {
+            background-color: var(--secondary-color);
+            color: var(--light-text);
+            border: none;
+            padding: 0 2rem;
+            cursor: pointer;
+            font-size: 1rem;
+            font-weight: 600;
+            transition: var(--transition);
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .search-button:hover {
+            background-color: var(--primary-color);
+        }
+
+        .filters {
+            display: flex;
+            justify-content: center;
+            gap: 1rem;
+            margin-top: 1.5rem;
+            flex-wrap: wrap;
+        }
+
+        .filter-select {
+            padding: 0.75rem 1rem;
+            border-radius: 8px;
+            border: 1px solid #e9ecef;
+            background-color: white;
+            font-size: 0.95rem;
+            color: var(--dark-text);
+            box-shadow: var(--shadow-sm);
+            transition: var(--transition);
+            min-width: 180px;
+        }
+
+        .filter-select:focus {
+            outline: none;
+            border-color: var(--accent-color);
+            box-shadow: 0 0 0 3px rgba(76, 201, 240, 0.3);
+        }
+
+        .results-section {
+            padding: 2rem 0;
+            flex: 1;
+        }
+
+        .results-info {
+            text-align: center;
+            margin-bottom: 1.5rem;
+            color: var(--gray-text);
+            font-size: 1.1rem;
+        }
+
+        .results-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+            gap: 1.75rem;
+            padding: 0.5rem;
+        }
+
+        .image-card {
+            background-color: #fff;
+            border-radius: var(--card-radius);
+            overflow: hidden;
+            box-shadow: var(--shadow-md);
+            transition: var(--transition);
+            position: relative;
+        }
+
+        .image-card:hover {
+            transform: translateY(-8px);
+            box-shadow: var(--shadow-lg);
+        }
+
+        .image-container {
+            position: relative;
+            padding-top: 75%;
+            overflow: hidden;
+            background: linear-gradient(135deg, #f5f7fa, #e4e8eb);
+        }
+
+        .image-container img {
+            position: absolute;
+            top: 0; 
+            left: 0;
+            width: 100%; 
+            height: 100%;
+            object-fit: cover;
+            transition: var(--transition);
+        }
+
+        .image-card:hover .image-container img {
+            transform: scale(1.03);
+        }
+
+        .image-details {
+            padding: 1.25rem;
+        }
+
+        .image-title {
+            font-size: 1rem;
+            font-weight: 600;
+            margin-bottom: 0.75rem;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            color: var(--dark-text);
+        }
+
+        .image-meta {
+            display: flex;
+            justify-content: space-between;
+            color: var(--gray-text);
+            font-size: 0.85rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .image-photographer {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            color: var(--gray-text);
+            font-size: 0.9rem;
+        }
+
+        .image-photographer a {
+            color: var(--primary-color);
+            text-decoration: none;
+            transition: var(--transition);
+        }
+
+        .image-photographer a:hover {
+            color: var(--secondary-color);
+            text-decoration: underline;
+        }
+
+        .image-actions {
+            display: flex;
+            margin-top: 1rem;
+            gap: 0.75rem;
+        }
+
+        .download-btn, .preview-btn {
+            padding: 0.75rem;
+            border: none;
+            border-radius: 8px;
+            font-size: 0.9rem;
+            cursor: pointer;
+            flex: 1;
+            text-align: center;
+            transition: var(--transition);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
+            font-weight: 500;
+        }
+
+        .download-btn {
+            background-color: var(--accent-color);
+            color: var(--dark-text);
+        }
+
+        .download-btn:hover {
+            background-color: #3abfdc;
+            transform: translateY(-2px);
+        }
+
+        .preview-btn {
+            background-color: #e9ecef;
+            color: var(--dark-text);
+        }
+
+        .preview-btn:hover {
+            background-color: #dee2e6;
+            transform: translateY(-2px);
+        }
+
+        .pagination {
+            display: flex;
+            justify-content: center;
+            margin-top: 3rem;
+            gap: 0.5rem;
+        }
+
+        .page-btn {
+            padding: 0.75rem 1.25rem;
+            border: 1px solid #dee2e6;
+            background-color: #fff;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: var(--transition);
+            font-weight: 500;
+            min-width: 45px;
+        }
+
+        .page-btn.active {
+            background-color: var(--primary-color);
+            color: var(--light-text);
+            border-color: var(--primary-color);
+        }
+
+        .page-btn:hover:not(.active) {
+            background-color: #f1f3f5;
+            border-color: #ced4da;
+        }
+
+        .page-btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0; 
+            left: 0;
+            width: 100%; 
+            height: 100%;
+            background-color: rgba(0,0,0,0.9);
+            z-index: 1000;
+            justify-content: center;
+            align-items: center;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+
+        .modal.show {
+            display: flex;
+            opacity: 1;
+        }
+
+        .modal-content {
+            position: relative;
+            max-width: 90%;
+            max-height: 90%;
+            animation: fadeIn 0.3s ease;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: scale(0.95); }
+            to { opacity: 1; transform: scale(1); }
+        }
+
+        .modal-image {
+            max-width: 100%;
+            max-height: 80vh;
+            display: block;
+            border-radius: var(--border-radius);
+            box-shadow: 0 10px 25px rgba(0,0,0,0.3);
+        }
+
+        .modal-close {
+            position: absolute;
+            top: -50px; 
+            right: 0;
+            color: #fff;
+            font-size: 2rem;
+            cursor: pointer;
+            transition: var(--transition);
+            background: rgba(255,255,255,0.2);
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .modal-close:hover {
+            background: rgba(255,255,255,0.3);
+            transform: rotate(90deg);
+        }
+
+        .modal-actions {
+            display: flex;
+            justify-content: center;
+            gap: 1rem;
+            margin-top: 1.5rem;
+        }
+
+        .modal-download {
+            padding: 1rem 2rem;
+            background-color: var(--accent-color);
+            color: var(--dark-text);
+            border: none;
+            border-radius: 50px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: var(--transition);
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+
+        .modal-download:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 8px rgba(0,0,0,0.15);
+        }
+
+        .loader {
+            display: none;
+            text-align: center;
+            padding: 3rem 0;
+        }
+
+        .loader-spinner {
+            width: 60px;
+            height: 60px;
+            border: 6px solid #f3f3f3;
+            border-top: 6px solid var(--primary-color);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 1.5rem;
+        }
+
+        .loader p {
+            font-size: 1.1rem;
+            color: var(--gray-text);
+        }
+
+        .no-results {
+            text-align: center;
+            padding: 3rem;
+            color: var(--gray-text);
+        }
+
+        .no-results i {
+            font-size: 3rem;
+            margin-bottom: 1rem;
+            color: #dee2e6;
+        }
+
+        .no-results h3 {
+            font-size: 1.5rem;
+            margin-bottom: 0.5rem;
+            color: var(--dark-text);
+        }
+
+        .no-results p {
+            font-size: 1.1rem;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        footer {
+            text-align: center;
+            padding: 2rem 0;
+            background-color: #fff;
+            color: var(--gray-text);
+            margin-top: 2rem;
+            box-shadow: 0 -2px 10px rgba(0,0,0,0.05);
+        }
+
+        footer p {
+            margin-bottom: 0.5rem;
+        }
+
+        footer a {
+            color: var(--primary-color);
+            text-decoration: none;
+            transition: var(--transition);
+        }
+
+        footer a:hover {
+            color: var(--secondary-color);
+            text-decoration: underline;
+        }
+
+        /* Floating action button */
+        .fab {
+            position: fixed;
+            bottom: 2rem;
+            right: 2rem;
+            width: 56px;
+            height: 56px;
+            background-color: var(--primary-color);
+            color: white;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.2);
+            cursor: pointer;
+            z-index: 100;
+            transition: var(--transition);
+            border: none;
+        }
+
+        .fab:hover {
+            background-color: var(--secondary-color);
+            transform: translateY(-3px) scale(1.05);
+        }
+
+        /* Responsive adjustments */
+        @media (max-width: 992px) {
+            .results-grid {
+                grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+            }
+        }
+
+        @media (max-width: 768px) {
+            .logo {
+                font-size: 2rem;
+            }
+            
+            .search-container {
+                flex-direction: column;
+                border-radius: var(--border-radius);
+            }
+            
+            .search-button {
+                padding: 1rem;
+                justify-content: center;
+            }
+            
+            .results-grid {
+                grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+                gap: 1.25rem;
+            }
+            
+            .filters {
+                flex-direction: column;
+                align-items: center;
+            }
+            
+            .filter-select {
+                width: 100%;
+                max-width: 300px;
+            }
+        }
+
+        @media (max-width: 576px) {
+            .container {
+                padding: 0 1rem;
+            }
+            
+            .logo {
+                font-size: 1.75rem;
+            }
+            
+            .results-grid {
+                grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+                gap: 1rem;
+            }
+            
+            .image-actions {
+                flex-direction: column;
+                gap: 0.5rem;
+            }
+            
+            .download-btn, .preview-btn {
+                width: 100%;
+            }
+            
+            .fab {
+                bottom: 1.5rem;
+                right: 1.5rem;
+                width: 48px;
+                height: 48px;
+                font-size: 1.25rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <div class="container">
+            <div class="logo">
+                <i class="fas fa-camera-retro"></i>
+                ImageFinder
+            </div>
+            <div class="tagline">Discover stunning free images for your creative projects</div>
+        </div>
+    </header>
+    
+    <main>
+        <section class="search-section">
+            <div class="container">
+                <div class="search-container">
+                    <input type="text" class="search-input" placeholder="Search for nature, people, technology..." id="searchInput" />
+                    <button class="search-button" id="searchButton">
+                        <i class="fas fa-search"></i> Search
+                    </button>
+                </div>
+                <div class="filters">
+                    <select class="filter-select" id="sizeFilter">
+                        <option value="">Any Orientation</option>
+                        <option value="landscape">Landscape</option>
+                        <option value="portrait">Portrait</option>
+                        <option value="squarish">Square</option>
+                    </select>
+                    <select class="filter-select" id="colorFilter">
+                        <option value="">Any Color</option>
+                        <option value="black_and_white">Black & White</option>
+                        <option value="black">Black</option>
+                        <option value="white">White</option>
+                        <option value="yellow">Yellow</option>
+                        <option value="orange">Orange</option>
+                        <option value="red">Red</option>
+                        <option value="purple">Purple</option>
+                        <option value="magenta">Magenta</option>
+                        <option value="green">Green</option>
+                        <option value="teal">Teal</option>
+                        <option value="blue">Blue</option>
+                    </select>
+                    <select class="filter-select" id="typeFilter">
+                        <option value="">Any Content</option>
+                        <option value="high">High Quality</option>
+                        <option value="low">Low Quality</option>
+                    </select>
+                </div>
+            </div>
+        </section>
+        
+        <div class="loader" id="loader">
+            <div class="loader-spinner"></div>
+            <p>Searching for beautiful images...</p>
+        </div>
+        
+        <section class="results-section">
+            <div class="container">
+                <div class="results-info" id="resultsInfo">
+                    <!-- Populated by JS -->
+                </div>
+                <div class="results-grid" id="resultsGrid">
+                    <!-- Populated by JS -->
+                </div>
+                <div class="no-results" id="noResults" style="display:none;">
+                    <i class="fas fa-image"></i>
+                    <h3>No images found</h3>
+                    <p>Try different search terms or adjust your filters</p>
+                </div>
+                <div class="pagination" id="pagination"></div>
+            </div>
+        </section>
+    </main>
+    
+    <div class="modal" id="previewModal">
+        <div class="modal-content">
+            <span class="modal-close" id="modalClose">&times;</span>
+            <img src="" alt="Preview" class="modal-image" id="modalImage" />
+            <div class="modal-actions">
+                <button class="modal-download" id="modalDownload">
+                    <i class="fas fa-download"></i> Download Image
+                </button>
+            </div>
+        </div>
+    </div>
+    
+    <button class="fab" id="scrollToTop" title="Go to top">
+        <i class="fas fa-arrow-up"></i>
+    </button>
+    
+    <footer>
+        <div class="container">
+            <p>Powered by <a href="https://unsplash.com/" target="_blank" rel="noopener">Unsplash</a></p>
+            <p>All photos are free to use under the Unsplash License</p>
+        </div>
+    </footer>
+
+    <script>
+        const UNSPLASH_API_KEY = '5AcZGDEpI2dfZ2KGkbaFuMjhZYnGK6Qu8mFT_b7W_7o';
+        const UNSPLASH_API_URL = 'https://api.unsplash.com';
+
+        let currentPage = 1;
+        const imagesPerPage = 20;
+        let totalImages = 0;
+        let currentSearchTerm = '';
+        let currentFilters = { size:'', color:'', type:'' };
+
+        // DOM Elements
+        const searchInput = document.getElementById('searchInput');
+        const searchButton = document.getElementById('searchButton');
+        const sizeFilter = document.getElementById('sizeFilter');
+        const colorFilter = document.getElementById('colorFilter');
+        const typeFilter = document.getElementById('typeFilter');
+        const resultsGrid = document.getElementById('resultsGrid');
+        const resultsInfo = document.getElementById('resultsInfo');
+        const pagination = document.getElementById('pagination');
+        const loader = document.getElementById('loader');
+        const noResults = document.getElementById('noResults');
+        const previewModal = document.getElementById('previewModal');
+        const modalImage = document.getElementById('modalImage');
+        const modalClose = document.getElementById('modalClose');
+        const modalDownload = document.getElementById('modalDownload');
+        const scrollToTopBtn = document.getElementById('scrollToTop');
+
+        // Event Listeners
+        searchButton.addEventListener('click', () => {
+            const term = searchInput.value.trim();
+            if(term){
+                currentSearchTerm = term;
+                currentFilters = {
+                    size: sizeFilter.value,
+                    color: colorFilter.value,
+                    type: typeFilter.value
+                };
+                currentPage = 1;
+                searchImages();
+            }
+        });
+
+        searchInput.addEventListener('keypress', e => {
+            if(e.key === 'Enter'){
+                searchButton.click();
+            }
+        });
+
+        sizeFilter.addEventListener('change', triggerFilteredSearch);
+        colorFilter.addEventListener('change', triggerFilteredSearch);
+        typeFilter.addEventListener('change', triggerFilteredSearch);
+
+        modalClose.addEventListener('click', closeModal);
+        window.addEventListener('click', e => {
+            if(e.target === previewModal){
+                closeModal();
+            }
+        });
+
+        scrollToTopBtn.addEventListener('click', () => {
+            window.scrollTo({
+                top: 0,
+                behavior: 'smooth'
+            });
+        });
+
+        window.addEventListener('scroll', () => {
+            if (window.pageYOffset > 300) {
+                scrollToTopBtn.style.display = 'flex';
+            } else {
+                scrollToTopBtn.style.display = 'none';
+            }
+        });
+
+        // Functions
+        function triggerFilteredSearch(){
+            if(currentSearchTerm){
+                currentFilters = {
+                    size: sizeFilter.value,
+                    color: colorFilter.value,
+                    type: typeFilter.value
+                };
+                currentPage = 1;
+                searchImages();
+            }
+        }
+
+        function searchImages(){
+            showLoader();
+            fetchUnsplashImages()
+                .then(data => {
+                    displayResults(data);
+                    hideLoader();
+                })
+                .catch(err => {
+                    console.error('Error fetching images:', err);
+                    hideLoader();
+                    showNoResults();
+                });
+        }
+
+        function fetchUnsplashImages(){
+            let url = new URL(`${UNSPLASH_API_URL}/search/photos`);
+            url.searchParams.set('client_id', UNSPLASH_API_KEY);
+            url.searchParams.set('query', currentSearchTerm);
+            url.searchParams.set('page', currentPage);
+            url.searchParams.set('per_page', imagesPerPage);
+
+            if(currentFilters.color) url.searchParams.set('color', currentFilters.color);
+            if(currentFilters.size) url.searchParams.set('orientation', currentFilters.size);
+            if(currentFilters.type === 'high') url.searchParams.set('content_filter', 'high');
+
+            return fetch(url)
+                .then(res => {
+                    if(!res.ok) throw new Error('Network response not ok');
+                    return res.json();
+                })
+                .then(data => {
+                    totalImages = data.total;
+                    const images = data.results.map(img => ({
+                        id: img.id,
+                        title: img.description || img.alt_description || `Photo by ${img.user.name}`,
+                        url: img.urls.regular,
+                        thumb_url: img.urls.small,
+                        download_url: `https://unsplash.com/photos/${img.id}/download?client_id=${UNSPLASH_API_KEY}`,
+                        width: img.width,
+                        height: img.height,
+                        photographer: img.user.name,
+                        profile_url: img.user.links.html,
+                        fileSize: formatFileSize((img.width * img.height / 10000))
+                    }));
+                    return { images, total: data.total };
+                });
+        }
+
+        function formatFileSize(kb){
+            if(kb < 1000) return Math.round(kb) + ' KB';
+            return (kb / 1000).toFixed(1) + ' MB';
+        }
+
+        function displayResults(data){
+            const {images, total} = data;
+            totalImages = total;
+
+            if(images.length === 0){
+                showNoResults();
+                return;
+            }
+
+            noResults.style.display = 'none';
+
+            const startIndex = (currentPage - 1) * imagesPerPage + 1;
+            const endIndex = Math.min(startIndex + images.length -1, totalImages);
+            resultsInfo.textContent = `Showing ${startIndex}-${endIndex} of ${totalImages} results for "${currentSearchTerm}"`;
+
+            resultsGrid.innerHTML = '';
+            images.forEach(image => resultsGrid.appendChild(createImageCard(image)));
+            updatePagination();
+        }
+
+        function createImageCard(image){
+            const card = document.createElement('div');
+            card.className = 'image-card';
+
+            card.innerHTML = `
+                <div class="image-container">
+                    <img src="${image.thumb_url || image.url}" alt="${image.title}" loading="lazy" />
+                </div>
+                <div class="image-details">
+                    <div class="image-title">${image.title}</div>
+                    <div class="image-meta">
+                        <span>${image.width} × ${image.height}</span>
+                        <span>${image.fileSize}</span>
+                    </div>
+                    <div class="image-photographer">
+                        <i class="fas fa-user"></i>
+                        <span>By <a href="${image.profile_url}" target="_blank" rel="noopener">${image.photographer}</a></span>
+                    </div>
+                    <div class="image-actions">
+                        <button class="preview-btn">
+                            <i class="fas fa-eye"></i> Preview
+                        </button>
+                        <button class="download-btn">
+                            <i class="fas fa-download"></i> Download
+                        </button>
+                    </div>
+                </div>
+            `;
+
+            const previewBtn = card.querySelector('.preview-btn');
+            const downloadBtn = card.querySelector('.download-btn');
+
+            previewBtn.addEventListener('click', () => openPreviewModal(image.url, image.title, image.download_url));
+            downloadBtn.addEventListener('click', () => downloadImage(image.download_url, image.title));
+
+            return card;
+        }
+
+        function openPreviewModal(imageUrl, imageTitle, downloadUrl){
+            modalImage.src = imageUrl;
+            modalImage.alt = imageTitle;
+            previewModal.classList.add('show');
+            document.body.style.overflow = 'hidden';
+
+            modalDownload.onclick = () => downloadImage(downloadUrl, imageTitle);
+        }
+
+        function closeModal(){
+            previewModal.classList.remove('show');
+            document.body.style.overflow = '';
+            modalImage.src = '';
+        }
+
+        function downloadImage(downloadUrl, imageTitle){
+            if(!downloadUrl){
+                alert('Download link not available.');
+                return;
+            }
+            
+            // Create a temporary anchor element to trigger download
+            const link = document.createElement('a');
+            link.href = downloadUrl;
+            link.download = imageTitle || 'unsplash-image';
+            link.target = '_blank';
+            link.rel = 'noopener noreferrer';
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+        }
+
+        function updatePagination(){
+            pagination.innerHTML = '';
+            const totalPages = Math.ceil(totalImages / imagesPerPage);
+            if(totalPages <= 1) return;
+
+            if(currentPage > 1) {
+                addPaginationButton('<i class="fas fa-chevron-left"></i>', currentPage -1, false, 'Previous');
+            }
+
+            const maxShown = 5;
+            let start = Math.max(1, currentPage - Math.floor(maxShown/2));
+            let end = Math.min(totalPages, start + maxShown -1);
+            if(end - start +1 < maxShown) start = Math.max(1, end - maxShown +1);
+
+            if(start > 1){
+                addPaginationButton('1', 1);
+                if(start > 2) addEllipsis();
+            }
+            for(let i=start; i<=end; i++){
+                addPaginationButton(i.toString(), i, i === currentPage);
+            }
+            if(end < totalPages){
+                if(end < totalPages -1) addEllipsis();
+                addPaginationButton(totalPages.toString(), totalPages);
+            }
+            if(currentPage < totalPages) {
+                addPaginationButton('<i class="fas fa-chevron-right"></i>', currentPage +1, false, 'Next');
+            }
+        }
+
+        function addPaginationButton(text, pageNum, isActive=false, ariaLabel=''){
+            const btn = document.createElement('button');
+            btn.className = `page-btn${isActive?' active':''}`;
+            btn.innerHTML = text;
+            if(ariaLabel) btn.setAttribute('aria-label', ariaLabel);
+            btn.addEventListener('click', () => {
+                if(pageNum !== currentPage){
+                    currentPage = pageNum;
+                    searchImages();
+                    document.querySelector('.results-section').scrollIntoView({behavior:'smooth'});
+                }
+            });
+            pagination.appendChild(btn);
+        }
+
+        function addEllipsis(){
+            const ellipsis = document.createElement('span');
+            ellipsis.className = 'page-btn';
+            ellipsis.textContent = '...';
+            ellipsis.style.cursor = 'default';
+            pagination.appendChild(ellipsis);
+        }
+
+        function showLoader(){
+            loader.style.display = 'block';
+            resultsGrid.style.display = 'none';
+            pagination.style.display = 'none';
+            noResults.style.display = 'none';
+        }
+
+        function hideLoader(){
+            loader.style.display = 'none';
+            resultsGrid.style.display = 'grid';
+            pagination.style.display = 'flex';
+        }
+
+        function showNoResults(){
+            resultsGrid.style.display = 'none';
+            pagination.style.display = 'none';
+            noResults.style.display = 'block';
+            resultsInfo.textContent = `No results found for "${currentSearchTerm}"`;
+        }
+    </script>
+</body>
+</html>
